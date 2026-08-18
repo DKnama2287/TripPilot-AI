@@ -4,6 +4,7 @@ let currentThreadId = localStorage.getItem("travel_thread_id") || null;
 let latestAnswerMarkdown = "";
 let savedTrips = [];
 let hasActiveTrip = false;
+let chatHistoryKey = null;
 
 const presets = {
     japan: {
@@ -285,6 +286,7 @@ function selectSavedTrip(index) {
     if (latestAnswerMarkdown) {
         showResult(latestAnswerMarkdown, currentThreadId || "saved-trip");
     }
+    loadChatHistory(true);
 }
 
 function clearVisiblePlan() {
@@ -308,7 +310,8 @@ async function loadSavedTrips(selectLatest = true) {
 
         if (savedTrips.length) {
             if (selectLatest) {
-                selectSavedTrip(0);
+                const currentIndex = savedTrips.findIndex((trip) => trip.thread_id === currentThreadId);
+                selectSavedTrip(currentIndex >= 0 ? currentIndex : 0);
             }
             return;
         }
@@ -318,7 +321,7 @@ async function loadSavedTrips(selectLatest = true) {
         localStorage.removeItem("travel_thread_id");
         clearVisiblePlan();
         clearTripForm();
-        resetChat();
+        await loadChatHistory(true);
         renderSavedTrips();
     } catch (error) {
         savedTrips = [];
@@ -502,7 +505,11 @@ function showResult(answer, threadId) {
 
     document.getElementById("threadInfo").textContent = `Thread ID: ${threadId}`;
     document.getElementById("resultSection").classList.remove("hidden");
+    if (chatHistoryKey !== threadId) {
+        resetChat();
+    }
     addChatBubble("assistant", "Your trip plan is ready. Ask me to adjust the budget, swap hotels, add restaurants, or make the itinerary slower.");
+    chatHistoryKey = threadId;
     renderAgents(true);
     initIcons();
 }
@@ -703,7 +710,38 @@ function setChatBubbleContent(bubble, text, role) {
 function resetChat() {
     const messages = document.getElementById("chatMessages");
     messages.innerHTML = "";
+    chatHistoryKey = currentThreadId || "general";
     addChatBubble("assistant", "Hi! I can help modify your itinerary, find alternatives, adjust budget, suggest restaurants, and answer travel questions.");
+}
+
+async function loadChatHistory(force = false) {
+    const threadId = currentThreadId || "general";
+    const messagesBox = document.getElementById("chatMessages");
+
+    if (!currentUser || !messagesBox || (!force && chatHistoryKey === threadId)) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/chat?thread_id=${encodeURIComponent(threadId)}`);
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            throw new Error(data.error || "Could not load chat history.");
+        }
+
+        messagesBox.innerHTML = "";
+        if (data.messages && data.messages.length) {
+            data.messages.forEach((message) => {
+                addChatBubble(message.role === "assistant" ? "assistant" : "user", message.content);
+            });
+        } else {
+            addChatBubble("assistant", "Hi! I can help modify your itinerary, find alternatives, adjust budget, suggest restaurants, and answer travel questions.");
+        }
+        chatHistoryKey = threadId;
+    } catch (error) {
+        resetChat();
+    }
 }
 
 async function sendChat(event) {
@@ -723,7 +761,7 @@ async function sendChat(event) {
             body: JSON.stringify({
                 message,
                 trip_context: tripContextForChat(),
-                thread_id: currentThreadId
+                thread_id: currentThreadId || "general"
             })
         });
         const data = await response.json();

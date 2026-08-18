@@ -81,9 +81,9 @@ body.light-theme .page-bg {
 }
 
 .dashboard-shell {
-    width: min(1900px, 100%);
+    width: 100%;
     min-height: 100vh;
-    padding: 26px;
+    padding: 24px;
     display: grid;
     grid-template-columns: 280px minmax(0, 1fr);
     gap: 24px;

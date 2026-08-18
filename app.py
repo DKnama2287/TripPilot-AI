@@ -454,6 +454,51 @@ async def chat_agent(
         )
 
 
+@app.get("/api/chat")
+async def chat_history(
+    thread_id: str = "general",
+    trip_session: str | None = Cookie(default=None),
+):
+    try:
+        user = get_current_user(trip_session)
+        if not user:
+            return JSONResponse(
+                status_code=401,
+                content={"success": False, "error": "Please login first."},
+            )
+
+        with db_pool.connection() as conn:
+            messages = conn.execute(
+                """
+                SELECT role, content, created_at
+                FROM trip_chat_messages
+                WHERE user_id = %s AND COALESCE(thread_id, 'general') = %s
+                ORDER BY created_at ASC
+                LIMIT 80
+                """,
+                (user["id"], thread_id or "general"),
+            ).fetchall()
+
+        return {
+            "success": True,
+            "messages": [
+                {
+                    "role": message["role"],
+                    "content": message["content"],
+                    "created_at": message["created_at"].isoformat(),
+                }
+                for message in messages
+            ],
+        }
+    except Exception as e:
+        print("CHAT HISTORY ERROR:", e)
+        traceback.print_exc()
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "error": str(e)},
+        )
+
+
 @app.get("/health")
 async def health_check():
     return {
