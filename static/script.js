@@ -566,10 +566,6 @@ function copyResult() {
     }).catch(() => showError("Could not copy result."));
 }
 
-function copyShareLink() {
-    navigator.clipboard.writeText(window.location.href).catch(() => {});
-}
-
 function downloadPDF() {
     const pdfContent = document.getElementById("pdfContent");
     if (!latestAnswerMarkdown || !pdfContent) {
