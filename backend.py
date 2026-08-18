@@ -138,7 +138,7 @@ def hotel_agent(state: TravelState):
 
 def itinerary_agent(state: TravelState):
     prompt = f"""
-Create a complete travel itinerary.
+Create a complete travel itinerary from the user's trip brief.
 
 User Query:
 {state['user_query']}
@@ -149,11 +149,19 @@ Flight Results:
 Hotel Results:
 {state['hotel_results']}
 
-Make the itinerary practical, budget-aware, and easy to follow.
+Requirements:
+- Respect origin, destination, dates, number of travellers, budget, hotel style,
+  interests, and special needs from the user brief.
+- If a critical detail is missing, state the assumption you used instead of
+  inventing certainty.
+- Build a realistic day-by-day route with morning, afternoon, and evening plans.
+- Include local transport guidance, approximate travel time between clusters,
+  meal/activity ideas, and pacing notes.
+- Keep the plan budget-aware and easy to follow.
 """
 
     response = llm.invoke([
-        SystemMessage(content="You are an expert travel planner."),
+        SystemMessage(content="You are an expert itinerary designer who creates realistic, budget-aware travel routes."),
         HumanMessage(content=prompt)
     ])
 
@@ -171,7 +179,7 @@ Make the itinerary practical, budget-aware, and easy to follow.
 
 def final_agent(state: TravelState):
     final_prompt = f"""
-Generate the final travel response for the user.
+Generate the final travel response for the user from the available agent results.
 
 User Request:
 {state['user_query']}
@@ -185,23 +193,30 @@ Hotels:
 Itinerary:
 {state['itinerary']}
 
-Format the final answer beautifully using these sections:
+Format the final answer in clean Markdown using these sections:
 
 1. Trip Summary
-2. Flight Information
-3. Hotel Suggestions
-4. Day-by-Day Itinerary
-5. Estimated Budget
-6. Final Recommendations
+2. Key Assumptions
+3. Flight Options
+4. Hotel Shortlist
+5. Day-by-Day Itinerary
+6. Estimated Budget
+7. Booking Checklist
+8. Final Recommendations
 
 Important:
-- Be clear and practical.
-- Mention that live flight API may not provide ticket prices if pricing is unavailable.
-- Keep the response useful for real travel planning.
+- Start with a short summary containing route, duration, travellers, budget, and style.
+- Use tables where they make flights, hotels, or budget easier to compare.
+- Do not invent exact live prices, availability, reviews, or booking links when the
+  tools did not provide them. Use estimated ranges and label them clearly.
+- Mention that live flight APIs may not provide ticket prices when pricing is unavailable.
+- Prefer recommendations that balance budget, convenience, quality, and traveller preferences.
+- Add a concise follow-up question only if one missing detail blocks a reliable plan.
+- Keep the answer useful for real booking decisions, not generic travel inspiration.
 """
 
     response = llm.invoke([
-        SystemMessage(content="You are a professional AI travel booking assistant."),
+        SystemMessage(content="You are TripPilot AI, a professional travel planning assistant focused on practical booking-ready advice."),
         HumanMessage(content=final_prompt)
     ])
 
@@ -302,3 +317,33 @@ def run_travel_agent(user_input: str, thread_id: str | None = None):
         "itinerary": result.get("itinerary", ""),
         "llm_calls": result.get("llm_calls", 0),
     }
+
+
+def run_trip_chat_agent(user_message: str, trip_context: str = "") -> str:
+    prompt = f"""
+Current trip context:
+{trip_context or "No generated trip plan yet."}
+
+Traveller message:
+{user_message}
+
+Answer as a helpful in-app travel assistant. Keep the response concise and
+actionable. If the user asks to change the plan, explain the best adjustment
+and mention any tradeoffs in budget, timing, or comfort. If live availability
+or exact prices are needed, say what should be checked before booking.
+
+Chat formatting rules:
+- Do not use Markdown tables, pipe tables, or long comparison grids.
+- Use a short title, then compact bullet points.
+- Keep line length friendly for a narrow chat panel.
+- Use bold labels sparingly, for example **Breakfast:** or **Dinner:**.
+- For food or hotel questions, group recommendations by category and include
+  3 to 6 practical examples.
+"""
+
+    response = llm.invoke([
+        SystemMessage(content="You are TripPilot Assistant, a concise travel copilot. Your replies appear in a narrow chat panel, so never use tables; use compact Markdown bullets."),
+        HumanMessage(content=prompt),
+    ])
+
+    return response.content

@@ -2,128 +2,338 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>TripMate AI</title>
-
+    <title>TripPilot AI</title>
+    <link rel="preconnect" href="https://images.unsplash.com">
     <link rel="stylesheet" href="/static/style.css">
 </head>
-
 <body>
-
-    <div class="page-bg">
-        <div class="gradient-circle circle-1"></div>
-        <div class="gradient-circle circle-2"></div>
-        <div class="gradient-circle circle-3"></div>
+    <div class="auth-overlay" id="authOverlay">
+        <section class="auth-modal">
+            <div class="auth-art">
+                <div class="brand-lockup">
+                    <span class="brand-mark">TP</span>
+                    <div>
+                        <h1>TripPilot AI</h1>
+                        <p>Multi-Agent Trip Planner</p>
+                    </div>
+                </div>
+                <div class="auth-copy">
+                    <p class="eyebrow">Plan smarter</p>
+                    <h2>Your trip dashboard, agents, budget and chat in one place.</h2>
+                </div>
+            </div>
+            <div class="auth-form-wrap">
+                <div class="auth-tabs">
+                    <button class="active" id="loginTab" type="button" onclick="setAuthMode('login')">Login</button>
+                    <button id="signupTab" type="button" onclick="setAuthMode('signup')">Signup</button>
+                </div>
+                <form class="auth-form" onsubmit="submitAuth(event)">
+                    <label id="nameField" class="hidden">
+                        <span>Name</span>
+                        <input id="authName" type="text" autocomplete="name" placeholder="Durgesh">
+                    </label>
+                    <label>
+                        <span>Email</span>
+                        <input id="authEmail" type="email" autocomplete="email" placeholder="durgesh@example.com" required>
+                    </label>
+                    <label>
+                        <span>Password</span>
+                        <input id="authPassword" type="password" autocomplete="current-password" placeholder="Minimum 6 characters" required>
+                    </label>
+                    <button id="authSubmit" class="primary-btn" type="submit">
+                        <i data-lucide="log-in"></i>
+                        Continue
+                    </button>
+                    <p id="authError" class="auth-error hidden"></p>
+                </form>
+            </div>
+        </section>
     </div>
 
-    <main class="app-container">
+    <div class="page-bg"></div>
 
-        <section class="hero-section">
-            <div class="badge">
-                ✈️ TripMate AI — A Multi-Agent Travel Planner with LangGraph
-            </div>
-
-            <h1>
-                Plan Your Perfect Trip with AI
-            </h1>
-
-            <p>
-                Search flights, discover hotels, and generate a complete travel itinerary using a multi-agent LangGraph system.
-            </p>
-        </section>
-
-        <section class="planner-card">
-
-            <div class="card-header">
+    <main class="dashboard-shell">
+        <aside class="sidebar">
+            <div class="brand-lockup">
+                <span class="brand-mark">TP</span>
                 <div>
-                    <h2>Where do you want to go?</h2>
-                    <p>
-                        Example: Plan a complete 7 days Japan trip from Bangladesh under 2 lakhs.
-                    </p>
-                </div>
-
-                <div class="status-pill">
-                    <span class="status-dot"></span>
-                    Online
+                    <h1>TripPilot AI</h1>
+                    <p>Multi-Agent Trip Planner</p>
                 </div>
             </div>
 
-            <div class="input-area">
-                <textarea
-                    id="userInput"
-                    placeholder="Plan a complete 7 days Japan trip including flights, hotels and sightseeing under 2 lakhs..."
-                ></textarea>
+            <nav class="nav-list" aria-label="Dashboard navigation">
+                <a class="active" href="#dashboard"><i data-lucide="layout-dashboard"></i>Dashboard</a>
+                <a href="#itinerary"><i data-lucide="calendar-days"></i>Itinerary</a>
+                <a href="#flights"><i data-lucide="plane"></i>Flights</a>
+                <a href="#hotels"><i data-lucide="building-2"></i>Hotels</a>
+                <a href="#activities"><i data-lucide="ticket"></i>Activities</a>
+                <a href="#budget"><i data-lucide="circle-dollar-sign"></i>Budget</a>
+                <a href="#documents"><i data-lucide="file-text"></i>Documents</a>
+                <a href="#saved"><i data-lucide="bookmark"></i>Saved Trips</a>
+            </nav>
 
-                <button id="sendBtn" onclick="sendMessage()">
-                    <span id="btnText">Generate Plan</span>
-                    <span id="btnLoader" class="loader hidden"></span>
+            <section class="current-trip-card">
+                <p class="mini-label">Current trip</p>
+                <div class="trip-mini">
+                    <img src="https://images.unsplash.com/photo-1528164344705-47542687000d?auto=format&fit=crop&w=300&q=80" alt="">
+                    <div>
+                        <strong id="sideTripTitle">No active trip</strong>
+                        <span id="sideTripMeta">Create or open a saved plan</span>
+                    </div>
+                </div>
+                <button class="outline-btn" type="button" onclick="document.getElementById('tripBuilder').scrollIntoView({behavior: 'smooth'})">
+                    <i data-lucide="arrow-right"></i>
+                    View Trip Details
                 </button>
-            </div>
+            </section>
 
-            <div class="quick-prompts">
-                <button onclick="setPrompt('Plan a complete 7 days Japan trip from Bangladesh including flights, hotels and sightseeing under 2 lakhs.')">
-                    Japan Trip
-                </button>
-
-                <button onclick="setPrompt('Plan a 5 days Dubai trip from Dhaka with flights, hotels and sightseeing.')">
-                    Dubai Trip
-                </button>
-
-                <button onclick="setPrompt('Plan a 7 days Thailand trip from Bangladesh with budget hotels and sightseeing.')">
-                    Thailand Trip
-                </button>
-
-                <button onclick="setPrompt('Give me all country flight info.')">
-                    Global Flights
-                </button>
-            </div>
-
-        </section>
-
-        <section id="resultSection" class="result-section hidden">
-
-            <div class="result-header">
+            <section class="profile-card">
+                <div class="avatar" id="userAvatar">D</div>
                 <div>
-                    <h2>Your AI Travel Plan</h2>
-                    <p id="threadInfo">Thread ID: -</p>
+                    <strong id="userName">Durgesh</strong>
+                    <span id="userEmail">durgesh@example.com</span>
                 </div>
+                <button type="button" onclick="logout()" title="Logout"><i data-lucide="log-out"></i></button>
+            </section>
+        </aside>
 
-                <div class="result-actions">
-                    <button class="copy-btn" onclick="copyResult()">
-                        Copy
-                    </button>
-
-                    <button class="download-btn" onclick="downloadPDF()">
-                        Download PDF
-                    </button>
+        <section class="main-panel" id="dashboard">
+            <header class="topbar">
+                <div>
+                    <h2>Dashboard</h2>
+                    <p>Overview of your trip plan and agent progress</p>
                 </div>
+                <div class="top-actions">
+                    <span class="status-pill"><span></span>Online</span>
+                    <button class="outline-btn" type="button" onclick="copyShareLink()"><i data-lucide="share-2"></i>Share Trip</button>
+                    <button class="primary-btn" type="button" onclick="document.getElementById('tripBuilder').scrollIntoView({behavior: 'smooth'})"><i data-lucide="pencil"></i>Edit Trip</button>
+                    <button class="icon-btn" id="themeToggle" type="button" onclick="toggleTheme()" title="Toggle theme"><i data-lucide="moon"></i></button>
+                </div>
+            </header>
+
+            <div class="dashboard-grid">
+                <section class="hero-card">
+                    <div>
+                        <h3>Hello, <span id="welcomeName">Durgesh</span>!</h3>
+                        <p id="heroSubline">Create your first trip or open a saved plan</p>
+                    </div>
+                    <img src="https://images.unsplash.com/photo-1545569341-9eb8b30979d9?auto=format&fit=crop&w=1200&q=80" alt="Japan temple and mountain">
+                    <div class="trip-stats">
+                        <span><i data-lucide="clock"></i><strong id="statDays">0 Days</strong><small id="statNights">0 Nights</small></span>
+                        <span><i data-lucide="users"></i><strong id="statTravellers">0 Travellers</strong><small>Guests</small></span>
+                        <span><i data-lucide="shield-check"></i><strong id="statBudget">Rs 0</strong><small>Total Budget</small></span>
+                        <span><i data-lucide="route"></i><strong id="statStyle">Not set</strong><small>Trip Style</small></span>
+                    </div>
+                </section>
+
+                <section class="agent-card">
+                    <div class="card-title">
+                        <h3>Agent Progress</h3>
+                        <button type="button">View all</button>
+                    </div>
+                    <div class="agent-grid" id="agentGrid"></div>
+                </section>
+
+                <section class="budget-card" id="budget">
+                    <h3>Budget Overview</h3>
+                    <div class="budget-content">
+                        <div class="budget-ring">
+                            <strong id="budgetTotal">Rs 0</strong>
+                            <span>Total Estimate</span>
+                        </div>
+                        <div class="budget-list">
+                            <p><span class="b flights"></span>Flights <strong id="budgetFlights">Rs 0</strong></p>
+                            <p><span class="b hotels"></span>Hotels <strong id="budgetHotels">Rs 0</strong></p>
+                            <p><span class="b activities"></span>Activities <strong id="budgetActivities">Rs 0</strong></p>
+                            <p><span class="b food"></span>Food <strong id="budgetFood">Rs 0</strong></p>
+                            <p><span class="b transport"></span>Transport <strong id="budgetTransport">Rs 0</strong></p>
+                        </div>
+                    </div>
+                    <div class="remaining">
+                        <strong id="remainingBudget">Rs 0</strong>
+                        <span>Remaining Budget</span>
+                    </div>
+                </section>
+
+                <section class="assistant-panel" id="assistant">
+                    <header>
+                        <div class="assistant-title">
+                            <span><i data-lucide="bot"></i></span>
+                            <div>
+                                <h3>TripPilot Assistant</h3>
+                                <p>Ask me anything about your trip</p>
+                            </div>
+                        </div>
+                        <div>
+                            <button type="button" onclick="resetChat()" title="Reset chat"><i data-lucide="refresh-cw"></i></button>
+                            <button type="button" onclick="toggleAssistant()" title="Minimize chat"><i data-lucide="x"></i></button>
+                        </div>
+                    </header>
+                    <div class="chat-messages" id="chatMessages"></div>
+                    <form class="chat-form" onsubmit="sendChat(event)">
+                        <input id="chatInput" type="text" placeholder="Ask anything about your trip...">
+                        <button type="submit" title="Send"><i data-lucide="send"></i></button>
+                    </form>
+                </section>
+
+                <section class="itinerary-panel" id="itinerary">
+                    <div class="card-title">
+                        <h3>Itinerary Overview</h3>
+                        <button class="outline-btn" type="button" onclick="document.getElementById('resultSection').scrollIntoView({behavior: 'smooth'})">View Full Itinerary</button>
+                    </div>
+                    <div class="day-grid" id="dayGrid"></div>
+                </section>
             </div>
 
-            <div id="pdfContent" class="pdf-content">
-                <h1 class="pdf-title">AI Travel Plan</h1>
-                <div id="resultBox" class="result-box"></div>
-            </div>
+            <section class="insight-row">
+                <article>
+                    <i data-lucide="clover"></i>
+                    <h4>Best Time to Visit</h4>
+                    <p id="bestTimeText">Great weather, comfortable sightseeing, and clear booking windows.</p>
+                </article>
+                <article>
+                    <i data-lucide="badge-info"></i>
+                    <h4>Travel Tips</h4>
+                    <p>Keep a buffer, cluster nearby sights, and verify live prices before payment.</p>
+                </article>
+                <article id="documents">
+                    <i data-lucide="file-check-2"></i>
+                    <h4>Documents</h4>
+                    <p>Passport, visa, insurance, flight tickets, hotel confirmations.</p>
+                </article>
+                <article>
+                    <i data-lucide="wand-sparkles"></i>
+                    <h4>Quick Actions</h4>
+                    <button class="outline-btn" type="button" onclick="sendMessage()"><i data-lucide="refresh-cw"></i>Regenerate Plan</button>
+                    <button class="outline-btn" type="button" onclick="downloadPDF()"><i data-lucide="download"></i>Export PDF</button>
+                </article>
+            </section>
 
+            <section class="details-grid">
+                <article class="detail-panel" id="flights">
+                    <div class="card-title">
+                        <h3>Flights</h3>
+                        <span id="flightStatus">Waiting for plan</span>
+                    </div>
+                    <p>Generate a trip to see flight guidance, airport notes, timing strategy, and live-data caveats here.</p>
+                </article>
+                <article class="detail-panel" id="hotels">
+                    <div class="card-title">
+                        <h3>Hotels</h3>
+                        <span id="hotelStatus">Waiting for plan</span>
+                    </div>
+                    <p>Your saved plan will summarize recommended areas, hotel type, nightly budget, and stay tradeoffs.</p>
+                </article>
+                <article class="detail-panel" id="activities">
+                    <div class="card-title">
+                        <h3>Activities</h3>
+                        <span id="activityStatus">Waiting for plan</span>
+                    </div>
+                    <p>Activity ideas update from the trip builder and become richer once TripPilot generates the full itinerary.</p>
+                </article>
+                <article class="detail-panel" id="saved">
+                    <div class="card-title">
+                        <h3>Saved Trips</h3>
+                        <span id="savedTripCount">0 plans</span>
+                    </div>
+                    <div class="saved-trip-list" id="savedTripList"></div>
+                </article>
+            </section>
+
+            <section class="trip-builder" id="tripBuilder">
+                <div class="card-title">
+                    <div>
+                        <p class="eyebrow">Trip builder</p>
+                        <h3>Edit your trip details</h3>
+                    </div>
+                    <button class="outline-btn" type="button" onclick="clearTripForm()"><i data-lucide="rotate-ccw"></i>Reset</button>
+                </div>
+                <div class="form-grid">
+                    <label><span>From</span><input id="originInput" type="text" placeholder="Delhi, India"></label>
+                    <label><span>Destination</span><input id="destinationInput" type="text" placeholder="Tokyo, Japan"></label>
+                    <label><span>Start date</span><input id="startDateInput" type="date"></label>
+                    <label><span>End date</span><input id="endDateInput" type="date"></label>
+                    <label><span>Travellers</span><input id="travellersInput" type="number" min="1" value="2"></label>
+                    <label><span>Total budget</span><input id="budgetInput" type="text" placeholder="Rs 2,50,000"></label>
+                    <label>
+                        <span>Trip style</span>
+                        <select id="styleInput">
+                            <option value="balanced">Balanced</option>
+                            <option value="budget-friendly">Budget-friendly</option>
+                            <option value="comfort-focused">Comfort-focused</option>
+                            <option value="luxury">Luxury</option>
+                            <option value="adventure">Adventure</option>
+                            <option value="family-friendly">Family-friendly</option>
+                        </select>
+                    </label>
+                    <label>
+                        <span>Hotel preference</span>
+                        <select id="hotelInput">
+                            <option value="clean, well-rated, convenient location">Clean and central</option>
+                            <option value="budget hotels or hostels">Budget stays</option>
+                            <option value="4-star hotels">4-star hotels</option>
+                            <option value="luxury resorts">Luxury resorts</option>
+                            <option value="family rooms or apartments">Family rooms</option>
+                        </select>
+                    </label>
+                </div>
+                <label class="wide-field">
+                    <span>Interests and special needs</span>
+                    <textarea id="notesInput" placeholder="Food, beaches, shopping, temples, nightlife, visa notes, dietary needs, kids, senior travellers, accessible transport..."></textarea>
+                </label>
+                <div class="action-row">
+                    <button id="sendBtn" class="primary-btn" type="button" onclick="sendMessage()">
+                        <i data-lucide="sparkles"></i>
+                        <span id="btnText">Generate Plan</span>
+                        <span id="btnLoader" class="loader hidden"></span>
+                    </button>
+                    <button class="outline-btn" type="button" onclick="previewPrompt()"><i data-lucide="file-text"></i>Preview Prompt</button>
+                    <button class="quick-chip" type="button" onclick="loadPreset('japan')">Japan</button>
+                    <button class="quick-chip" type="button" onclick="loadPreset('dubai')">Dubai</button>
+                    <button class="quick-chip" type="button" onclick="loadPreset('thailand')">Thailand</button>
+                    <button class="quick-chip" type="button" onclick="loadPreset('goa')">Goa</button>
+                </div>
+            </section>
+
+            <section id="promptPreview" class="prompt-preview hidden">
+                <div class="card-title">
+                    <h3>Prompt Preview</h3>
+                    <button class="outline-btn" type="button" onclick="hidePromptPreview()"><i data-lucide="x"></i>Close</button>
+                </div>
+                <pre id="promptText"></pre>
+            </section>
+
+            <section id="resultSection" class="result-section hidden">
+                <div class="card-title">
+                    <div>
+                        <p class="eyebrow">Generated plan</p>
+                        <h3>Your AI Travel Plan</h3>
+                        <span id="threadInfo">Thread ID: -</span>
+                    </div>
+                    <div class="result-actions">
+                        <button class="outline-btn copy-btn" type="button" onclick="copyResult()"><i data-lucide="copy"></i>Copy</button>
+                        <button class="primary-btn download-btn" type="button" onclick="downloadPDF()"><i data-lucide="download"></i>PDF</button>
+                    </div>
+                </div>
+                <div id="pdfContent" class="pdf-content">
+                    <h1 class="pdf-title">AI Travel Plan</h1>
+                    <div id="resultBox" class="result-box"></div>
+                </div>
+            </section>
+
+            <section id="errorBox" class="error-box hidden"></section>
         </section>
-
-        <section id="errorBox" class="error-box hidden"></section>
-
     </main>
 
-    <footer>
-        Built with FastAPI, LangGraph, Groq, PostgreSQL, Tavily and AviationStack
-    </footer>
+    <button class="chat-fab hidden" id="chatFab" type="button" onclick="toggleAssistant()">
+        <i data-lucide="message-circle"></i>
+    </button>
 
-    <!-- Markdown Renderer -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-
-    <!-- PDF Download Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
-    <!-- Your Custom JS -->
     <script src="/static/script.js"></script>
-
 </body>
 </html>
